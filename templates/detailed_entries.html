@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Batafsil yozuvlar - Smart Auto Park{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Batafsil yozuvlar</h1>
+            <p class="text-gray-600">Barcha avtomobil yozuvlarini batafsil ko'rish va qidirish</p>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Filtrlar</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <!-- Date From -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sana dan</label>
+                    <input type="date" id="dateFrom" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <!-- Date To -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sana gacha</label>
+                    <input type="date" id="dateTo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <!-- Number Plate -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Avtomobil raqami</label>
+                    <input type="text" id="numberPlate" placeholder="Raqam kiriting..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <!-- Payment Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">To'lov holati</label>
+                    <select id="paymentStatus" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">Hammasi</option>
+                        <option value="paid">To'langan</option>
+                        <option value="unpaid">To'lanmagan</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <!-- Entry Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Holat</label>
+                    <select id="entryStatus" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">Hammasi</option>
+                        <option value="inside">Ichkarida</option>
+                        <option value="exited">Chiqib ketgan</option>
+                    </select>
+                </div>
+                
+                <!-- Search -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Qidiruv</label>
+                    <input type="text" id="searchQuery" placeholder="Qidiruv..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <!-- Per Page -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sahifada ko'rsatish</label>
+                    <select id="perPage" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="25">25</option>
+                        <option value="50" selected>50</option>
+                        <option value="100">100</option>
+                        <option value="200">200</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap gap-3">
+                <button onclick="applyFilters()" class="primary-btn px-6 py-2">
+                    <i class="fas fa-search mr-2"></i>Qidirish
+                </button>
+                <button onclick="clearFilters()" class="secondary-btn px-6 py-2">
+                    <i class="fas fa-times mr-2"></i>Tozalash
+                </button>
+                <button onclick="exportDetailedData()" class="success-btn px-6 py-2">
+                    <i class="fas fa-download mr-2"></i>Yuklab olish
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <!-- Summary Counters -->
+            <div class="px-6 py-4 border-b border-gray-200 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="stats-card p-4">
+                    <div class="text-sm text-gray-600">To'langan</div>
+                    <div class="text-2xl font-bold text-green-600">
+                        <span id="sumPaid">0</span> ta
+                    </div>
+                    <div class="text-sm text-gray-700 mt-1">Jami: <span id="sumPaidAmount">0</span> so'm</div>
+                </div>
+                <div class="stats-card p-4">
+                    <div class="text-sm text-gray-600">0 so'm (to'langan)</div>
+                    <div id="sumUnpaidZero" class="text-2xl font-bold text-yellow-600">0</div>
+                </div>
+                <div class="stats-card p-4">
+                    <div class="text-sm text-gray-600">Ichkarida</div>
+                    <div id="sumInside" class="text-2xl font-bold text-blue-600">0</div>
+                </div>
+                <div class="stats-card p-4">
+                    <div class="text-sm text-gray-600">Chiqib ketgan</div>
+                    <div id="sumExited" class="text-2xl font-bold text-purple-600">0</div>
+                </div>
+            </div>
+            <!-- Results Header -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-900">Natijalar</h3>
+                    <div class="text-sm text-gray-600">
+                        Jami: <span id="totalCount" class="font-semibold">0</span> ta yozuv
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="hidden px-6 py-8 text-center">
+                <div class="inline-flex items-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-gray-600">Ma'lumotlar yuklanmoqda...</span>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            <div id="resultsTable" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avtomobil raqami</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kirish vaqti</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chiqish vaqti</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Davomiyligi</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To'lov miqdori</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To'lov holati</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Holat</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="entriesTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Entries will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="px-6 py-4 border-t border-gray-200 hidden">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Sahifa <span id="currentPage">1</span> dan <span id="totalPages">1</span> gacha
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="prevPage" onclick="changePage(-1)" class="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left mr-1"></i>Oldingi
+                        </button>
+                        <button id="nextPage" onclick="changePage(1)" class="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Keyingi<i class="fas fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full">
+            <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900" id="modalTitle">Rasm</h3>
+                <button onclick="closeImageModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <img id="modalImage" src="" alt="Rasm" class="w-full h-auto rounded">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+let totalPages = 1;
+let currentFilters = {};
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default dates (last 30 days)
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+    
+    document.getElementById('dateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
+    document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+    
+    // Load initial data
+    applyFilters();
+});
+
+function applyFilters() {
+    currentPage = 1;
+    loadDetailedEntries();
+}
+
+function clearFilters() {
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
+    document.getElementById('numberPlate').value = '';
+    document.getElementById('paymentStatus').value = 'all';
+    document.getElementById('entryStatus').value = 'all';
+    document.getElementById('searchQuery').value = '';
+    document.getElementById('perPage').value = '50';
+    
+    currentPage = 1;
+    loadDetailedEntries();
+}
+
+function loadDetailedEntries() {
+    const filters = {
+        date_from: document.getElementById('dateFrom').value,
+        date_to: document.getElementById('dateTo').value,
+        number_plate: document.getElementById('numberPlate').value,
+        payment_status: document.getElementById('paymentStatus').value,
+        entry_status: document.getElementById('entryStatus').value,
+        search: document.getElementById('searchQuery').value,
+        page: currentPage,
+        per_page: parseInt(document.getElementById('perPage').value)
+    };
+    
+    currentFilters = filters;
+    
+    // Show loading
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('resultsTable').classList.add('hidden');
+    document.getElementById('pagination').classList.add('hidden');
+    
+    // Build query string
+    const queryParams = new URLSearchParams();
+    Object.keys(filters).forEach(key => {
+        if (filters[key] && filters[key] !== 'all') {
+            queryParams.append(key, filters[key]);
+        }
+    });
+    
+    fetch(`/api/detailed-entries/?${queryParams.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                displayEntries(data.entries);
+                updatePagination(data.pagination);
+                updateSummary(data.summary);
+            } else {
+                showNotification('Xatolik yuz berdi: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Xatolik yuz berdi', 'error');
+        })
+        .finally(() => {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('resultsTable').classList.remove('hidden');
+        });
+}
+
+function updateSummary(summary) {
+    if (!summary) return;
+    document.getElementById('sumPaid').textContent = summary.paid_count;
+    document.getElementById('sumPaidAmount').textContent = (summary.paid_sum || 0).toLocaleString('uz-UZ');
+    document.getElementById('sumUnpaidZero').textContent = summary.unpaid_zero_count;
+    document.getElementById('sumInside').textContent = summary.inside_count;
+    document.getElementById('sumExited').textContent = summary.exited_count;
+}
+
+function displayEntries(entries) {
+    const tbody = document.getElementById('entriesTableBody');
+    tbody.innerHTML = '';
+    
+    if (entries.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+                    Hech qanday yozuv topilmadi
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    entries.forEach(entry => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">${entry.number_plate}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${entry.entry_time}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${entry.exit_time || '-'}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${entry.duration}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">${entry.total_amount.toLocaleString()} so'm</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    entry.is_paid 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                }">
+                    ${entry.payment_status}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    entry.entry_status === 'Ichkarida' 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-gray-100 text-gray-800'
+                }">
+                    ${entry.entry_status}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex space-x-2">
+                    ${entry.entry_image ? `
+                        <button onclick="showImage('${entry.entry_image}', 'Kirish rasmi')" 
+                                class="text-blue-600 hover:text-blue-900">
+                            <i class="fas fa-image mr-1"></i>Kirish
+                        </button>
+                    ` : ''}
+                    ${entry.exit_image ? `
+                        <button onclick="showImage('${entry.exit_image}', 'Chiqish rasmi')" 
+                                class="text-green-600 hover:text-green-900">
+                            <i class="fas fa-image mr-1"></i>Chiqish
+                        </button>
+                    ` : ''}
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function updatePagination(pagination) {
+    currentPage = pagination.current_page;
+    totalPages = pagination.total_pages;
+    
+    document.getElementById('totalCount').textContent = pagination.total_count;
+    document.getElementById('currentPage').textContent = currentPage;
+    document.getElementById('totalPages').textContent = totalPages;
+    
+    // Update pagination buttons
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+    
+    // Show pagination if needed
+    if (totalPages > 1) {
+        document.getElementById('pagination').classList.remove('hidden');
+    } else {
+        document.getElementById('pagination').classList.add('hidden');
+    }
+}
+
+function changePage(delta) {
+    const newPage = currentPage + delta;
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        loadDetailedEntries();
+    }
+}
+
+function showImage(imageUrl, title) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalImage').src = imageUrl;
+    document.getElementById('imageModal').classList.remove('hidden');
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').classList.add('hidden');
+}
+
+function exportDetailedData() {
+    // Build query string for export
+    const queryParams = new URLSearchParams();
+    Object.keys(currentFilters).forEach(key => {
+        if (currentFilters[key] && currentFilters[key] !== 'all' && key !== 'page' && key !== 'per_page') {
+            queryParams.append(key, currentFilters[key]);
+        }
+    });
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.href = `/api/detailed-entries/?${queryParams.toString()}&export=xls`;
+    link.download = `batafsil_yozuvlar_${new Date().toISOString().split('T')[0]}.xls`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Close modal when clicking outside
+document.getElementById('imageModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeImageModal();
+    }
+});
+
+// Search on Enter key
+document.getElementById('searchQuery').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        applyFilters();
+    }
+});
+
+// Auto-apply filters when changing per page
+document.getElementById('perPage').addEventListener('change', function() {
+    currentPage = 1;
+    loadDetailedEntries();
+});
+</script>
+{% endblock %}

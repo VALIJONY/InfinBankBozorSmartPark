@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avtomobillar boshqaruvi - Smart AutoPark</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1001;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .notification-success { background-color: #10B981; }
+        .notification-error { background-color: #EF4444; }
+        .notification-info { background-color: #3B82F6; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <a href="/home/" class="text-gray-600 hover:text-gray-900">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-2xl font-bold text-gray-900">Avtomobillar boshqaruvi</h1>
+                </div>
+                <button onclick="openCreateModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                    + Yangi avtomobil
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Jami avtomobillar</p>
+                        <p class="text-2xl font-bold text-gray-900" id="total-cars">{{ total_cars }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Bepul</p>
+                        <p class="text-2xl font-bold text-gray-900" id="free-cars">{{ free_cars }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-yellow-100 rounded-lg">
+                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Maxsus taksi</p>
+                        <p class="text-2xl font-bold text-gray-900" id="special-taxi">{{ special_taxi }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-red-100 rounded-lg">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Bloklangan</p>
+                        <p class="text-2xl font-bold text-gray-900" id="blocked-cars">{{ blocked_cars }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cars Table -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">Avtomobillar ro'yxati</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Raqam</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Holat</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Turlar</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="cars-table-body">
+                        {% for car in cars %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold mr-2">UZ</div>
+                                    <span class="text-sm font-medium text-gray-900">{{ car.number_plate }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if car.is_blocked %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Bloklangan
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Faol
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex flex-wrap gap-1">
+                                    {% if car.is_free %}
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                            Bepul
+                                        </span>
+                                        {% if car.position %}
+                                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                {{ car.position }}
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if car.is_special_taxi %}
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            Maxsus taksi
+                                        </span>
+                                        {% if car.license_file %}
+                                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                Litsenziya
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button onclick="openEditModalFromButton(this)" 
+                                        data-car-id="{{ car.id }}"
+                                        data-number-plate="{{ car.number_plate }}"
+                                        data-is-free="{% if car.is_free %}true{% else %}false{% endif %}"
+                                        data-is-special-taxi="{% if car.is_special_taxi %}true{% else %}false{% endif %}"
+                                        data-is-blocked="{% if car.is_blocked %}true{% else %}false{% endif %}"
+                                        data-position="{{ car.position|default:'' }}"
+                                        class="text-blue-600 hover:text-blue-900 mr-3">Tahrirlash</button>
+                                <button onclick="deleteCarFromButton(this)" 
+                                        data-car-id="{{ car.id }}"
+                                        data-number-plate="{{ car.number_plate }}"
+                                        class="text-red-600 hover:text-red-900">O'chirish</button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                Hozircha hech qanday avtomobil yo'q
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div id="carModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900" id="modal-title">Yangi avtomobil qo'shish</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="carForm" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Avtomobil raqami</label>
+                    <div class="flex items-center border-2 border-gray-300 rounded-lg bg-gray-50">
+                        <div class="bg-blue-600 text-white px-3 py-2 font-bold text-sm rounded-l-md">UZ</div>
+                        <input type="text" id="numberPlate" name="number_plate" maxlength="9" placeholder="90A123FA" required
+                               class="flex-1 px-3 py-2 text-lg tracking-widest font-bold bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-r-md uppercase">
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Avtomobil turi</label>
+                        <select id="carType" name="car_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="normal">Oddiy avtomobil</option>
+                            <option value="free">Bepul kirish</option>
+                            <option value="special_taxi">Maxsus taksi</option>
+                            <option value="blocked">Bloklangan</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Position input for free cars -->
+                    <div id="positionInput" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Lavozim <span class="text-red-500">*</span></label>
+                        <input type="text" id="position" name="position" placeholder="Masalan: Direktor, Boshqaruvchi..." 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <!-- License file input for special taxi -->
+                    <div id="licenseInput" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Litsenziya faylini yuklang</label>
+                        <input type="file" id="licenseFile" name="license_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">PDF, DOC, DOCX, JPG, PNG formatlari qabul qilinadi</p>
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+                        <span id="submit-text">Qo'shish</span>
+                    </button>
+                    <button type="button" onclick="closeModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition">
+                        Bekor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentCarId = null;
+        let isEditMode = false;
+
+        function openCreateModal() {
+            isEditMode = false;
+            currentCarId = null;
+            document.getElementById('modal-title').textContent = 'Yangi avtomobil qo\'shish';
+            document.getElementById('submit-text').textContent = 'Qo\'shish';
+            document.getElementById('carForm').reset();
+            document.getElementById('numberPlate').disabled = false;
+            document.getElementById('carType').value = 'normal';
+            toggleConditionalInputs('normal');
+            document.getElementById('carModal').style.display = 'block';
+        }
+
+        function openEditModal(carId, numberPlate, isFree, isSpecialTaxi, isBlocked, position) {
+            isEditMode = true;
+            currentCarId = carId;
+            document.getElementById('modal-title').textContent = 'Avtomobilni tahrirlash';
+            document.getElementById('submit-text').textContent = 'Saqlash';
+            document.getElementById('numberPlate').value = numberPlate;
+            document.getElementById('numberPlate').disabled = true;
+            
+            // Set car type based on flags
+            let carType = 'normal';
+            if (isBlocked) carType = 'blocked';
+            else if (isFree) carType = 'free';
+            else if (isSpecialTaxi) carType = 'special_taxi';
+            
+            document.getElementById('carType').value = carType;
+            document.getElementById('position').value = position || '';
+            toggleConditionalInputs(carType);
+            document.getElementById('carModal').style.display = 'block';
+        }
+        
+        // Data attribute'lardan ma'lumotlarni olish va openEditModal'ni chaqirish
+        function openEditModalFromButton(button) {
+            const carId = parseInt(button.getAttribute('data-car-id'));
+            const numberPlate = button.getAttribute('data-number-plate');
+            const isFree = button.getAttribute('data-is-free') === 'true';
+            const isSpecialTaxi = button.getAttribute('data-is-special-taxi') === 'true';
+            const isBlocked = button.getAttribute('data-is-blocked') === 'true';
+            const position = button.getAttribute('data-position') || '';
+            
+            openEditModal(carId, numberPlate, isFree, isSpecialTaxi, isBlocked, position);
+        }
+        
+        // Data attribute'lardan ma'lumotlarni olish va deleteCar'ni chaqirish
+        function deleteCarFromButton(button) {
+            const carId = parseInt(button.getAttribute('data-car-id'));
+            const numberPlate = button.getAttribute('data-number-plate');
+            deleteCar(carId, numberPlate);
+        }
+        
+        // Data attribute'lardan ma'lumotlarni olish va deleteCar'ni chaqirish
+        function deleteCarFromButton(button) {
+            const carId = parseInt(button.getAttribute('data-car-id'));
+            const numberPlate = button.getAttribute('data-number-plate');
+            deleteCar(carId, numberPlate);
+        }
+
+        function toggleConditionalInputs(carType) {
+            const positionInput = document.getElementById('positionInput');
+            const licenseInput = document.getElementById('licenseInput');
+            
+            // Hide all conditional inputs first
+            positionInput.classList.add('hidden');
+            licenseInput.classList.add('hidden');
+            
+            // Show relevant input based on car type
+            if (carType === 'free') {
+                positionInput.classList.remove('hidden');
+            } else if (carType === 'special_taxi') {
+                licenseInput.classList.remove('hidden');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('carModal').style.display = 'none';
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function updateStats() {
+            // Update stats based on current data
+            const cars = document.querySelectorAll('#cars-table-body tr');
+            let total = cars.length;
+            let free = 0;
+            let specialTaxi = 0;
+            let blocked = 0;
+
+            cars.forEach(car => {
+                const checkboxes = car.querySelectorAll('input[type="checkbox"]');
+                if (checkboxes[0]?.checked) free++;
+                if (checkboxes[1]?.checked) specialTaxi++;
+                if (checkboxes[2]?.checked) blocked++;
+            });
+
+            document.getElementById('total-cars').textContent = total;
+            document.getElementById('free-cars').textContent = free;
+            document.getElementById('special-taxi').textContent = specialTaxi;
+            document.getElementById('blocked-cars').textContent = blocked;
+        }
+
+        function refreshTable() {
+            location.reload();
+        }
+
+        document.getElementById('carForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const carType = document.getElementById('carType').value;
+            const position = document.getElementById('position').value;
+            const licenseFile = document.getElementById('licenseFile').files[0];
+            
+            // Client-side validation
+            if (carType === 'free' && !position.trim()) {
+                showNotification('Bepul avtomobillar uchun lavozim kiritish majburiy', 'error');
+                document.getElementById('position').focus();
+                return;
+            }
+            
+            const formData = {
+                number_plate: document.getElementById('numberPlate').value.toUpperCase(),
+                car_type: carType,
+                position: position,
+                is_blocked: carType === 'blocked'
+            };
+
+            try {
+                const url = isEditMode 
+                    ? `/api/cars/${currentCarId}/update/`
+                    : '/api/cars/create/';
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // If it's a special taxi and there's a license file, upload it
+                    if (carType === 'special_taxi' && licenseFile && result.car) {
+                        const uploadFormData = new FormData();
+                        uploadFormData.append('license_file', licenseFile);
+                        uploadFormData.append('car_id', result.car.id);
+                        
+                        const uploadResponse = await fetch('/api/cars/upload-license/', {
+                            method: 'POST',
+                            body: uploadFormData
+                        });
+                        
+                        const uploadResult = await uploadResponse.json();
+                        if (!uploadResult.success) {
+                            showNotification('Litsenziya fayli yuklanmadi: ' + uploadResult.error, 'error');
+                        }
+                    }
+                    
+                    showNotification(
+                        isEditMode ? 'Avtomobil muvaffaqiyatli yangilandi' : 'Avtomobil muvaffaqiyatli qo\'shildi', 
+                        'success'
+                    );
+                    closeModal();
+                    refreshTable();
+                } else {
+                    showNotification(result.error || 'Xatolik yuz berdi', 'error');
+                }
+            } catch (error) {
+                showNotification('Tarmoq xatosi', 'error');
+            }
+        });
+
+        async function deleteCar(carId, numberPlate) {
+            if (!confirm(`"${numberPlate}" raqamli avtomobilni o'chirishni xohlaysizmi?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/cars/${carId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Avtomobil muvaffaqiyatli o\'chirildi', 'success');
+                    refreshTable();
+                } else {
+                    showNotification(result.error || 'Xatolik yuz berdi', 'error');
+                }
+            } catch (error) {
+                showNotification('Tarmoq xatosi', 'error');
+            }
+        }
+
+        // Add event listener for car type select
+        document.getElementById('carType').addEventListener('change', function() {
+            toggleConditionalInputs(this.value);
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('carModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+    </script>
+</body>
+</html> 

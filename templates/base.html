@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Smart Auto Park{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #1f2937;
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .primary-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+        
+        .secondary-btn {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: #fff;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+        }
+        .secondary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.6);
+        }
+        
+        .success-btn {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: #fff;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
+        }
+        .success-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 184, 148, 0.6);
+        }
+        
+        .warning-btn {
+            background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+            color: #fff;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px rgba(253, 203, 110, 0.4);
+        }
+        .warning-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(253, 203, 110, 0.6);
+        }
+        
+        .danger-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: #fff;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        .danger-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+        }
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+        .close:hover {
+            color: #000;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="glass-card rounded-2xl p-6 mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div class="flex items-center space-x-4">
+                <div class="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
+                    <i class="fas fa-car text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Smart Auto Park</h1>
+                    <p class="text-gray-600 text-sm">Avtomobil parkovka tizimi</p>
+                </div>
+            </div>
+            <div class="mt-4 md:mt-0 flex gap-3 items-center">
+                <div id="connection-status" class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    Ulanish...
+                </div>
+                <a href="{% url 'home' %}" class="primary-btn px-4 py-2 text-sm">
+                    <i class="fas fa-home mr-2"></i>Bosh sahifa
+                </a>
+                <a href="{% url 'detailed_entries' %}" class="primary-btn px-4 py-2 text-sm">
+                    <i class="fas fa-list-alt mr-2"></i>Batafsil yozuvlar
+                </a>
+                <a href="{% url 'unpaid_entries' %}" class="primary-btn px-4 py-2 text-sm">
+                    <i class="fas fa-money-bill-wave mr-2"></i>Translatsiya
+                </a>
+                <a href="{% url 'cars_management' %}" class="primary-btn px-4 py-2 text-sm">
+                    <i class="fas fa-cog mr-2"></i>Avtomobillar
+                </a>
+                <a href="{% url 'logout' %}" class="danger-btn px-4 py-2 text-sm">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Chiqish
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-8 text-gray-600 text-sm">
+        <p>&copy; 2024 Smart Auto Park. Barcha huquqlar himoyalangan.</p>
+    </footer>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <!-- Base JavaScript -->
+    <script>
+        // Base notification function
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full`;
+            
+            // Set color based on type
+            switch(type) {
+                case 'success':
+                    notification.className += ' bg-green-500';
+                    break;
+                case 'error':
+                    notification.className += ' bg-red-500';
+                    break;
+                case 'warning':
+                    notification.className += ' bg-yellow-500';
+                    break;
+                default:
+                    notification.className += ' bg-blue-500';
+            }
+            
+            notification.textContent = message;
+            
+            // Add to page
+            container.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 5000);
+        }
+
+        // Connection status update
+        function updateConnectionStatus(status, message) {
+            const statusElement = document.getElementById('connection-status');
+            if (statusElement) {
+                statusElement.textContent = message;
+                statusElement.className = `px-3 py-1 rounded-full text-xs font-medium ${
+                    status === 'connected' ? 'bg-green-100 text-green-800' :
+                    status === 'connecting' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                }`;
+            }
+        }
+
+        // Initialize connection status
+        document.addEventListener('DOMContentLoaded', function() {
+            updateConnectionStatus('connected', 'Ulangan');
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,737 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To'lanmagan Avtomobillar - Smart AutoPark</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-y: auto;
+            height: 100vh;
+        }
+        
+        html {
+            overflow-y: auto;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .status-indicator {
+            position: relative;
+        }
+        
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -12px;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: pulse-slow 2s infinite;
+        }
+        
+        .image-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .image-hover:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .floating-animation {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .notification-slide {
+            animation: slideInRight 0.5s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen font-inter">
+    <!-- Back Button -->
+    <div class="fixed top-6 left-6 z-50">
+        <a href="{% url 'home' %}" class="group flex items-center justify-center w-14 h-14 bg-white/20 backdrop-blur-lg rounded-2xl border border-white/30 text-white hover:bg-white/30 transition-all duration-300 hover:scale-110 card-shadow">
+            <i class="fas fa-arrow-left text-lg group-hover:-translate-x-1 transition-transform duration-300"></i>
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div class="relative pt-8 pb-2 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-4">
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-lg rounded-xl mb-3 floating-animation">
+                    <i class="fas fa-car text-xl text-white"></i>
+                </div>
+                <h1 class="text-2xl md:text-3xl font-bold text-white mb-1">
+                    Translatsiya
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="px-6 pb-4">
+        <div class="max-w-7xl mx-auto">
+            <div id="unpaid-container" class="animate-fade-in">
+                <!-- Loading State -->
+                <div id="loading-state" class="text-center py-12">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-lg rounded-2xl mb-6">
+                        <i class="fas fa-spinner text-2xl text-white animate-spin"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Ma'lumotlar yuklanmoqda</h3>
+                    <p class="text-white/70 mb-4">Kuting<span class="loading-dots"></span></p>
+                    <button id="reconnect-btn" onclick="manualReconnect()" class="hidden bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-lg border border-white/30 hover:bg-white/30 transition-all duration-300">
+                        <i class="fas fa-redo mr-2"></i>Qayta ulanish
+                    </button>
+                </div>
+
+                <!-- No Data State -->
+                <div id="no-data-state" class="hidden text-center py-12">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-lg rounded-2xl mb-6">
+                        <i class="fas fa-check-circle text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Ma'lumot yo'q</h3>
+                    <p class="text-white/70">Hozirda ko'rsatish uchun ma'lumot mavjud emas</p>
+                </div>
+
+                <!-- Vehicle Card -->
+                <div id="vehicle-card" class="hidden">
+                    <div class="glass-effect rounded-2xl p-4 card-shadow animate-slide-up">
+                        <!-- Header Section -->
+                        <div class="text-center mb-4">
+                            <div class="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl mb-3 shadow-lg">
+                                <i class="fas fa-car text-lg text-white"></i>
+                            </div>
+                            <div class="mb-3">
+                                <h2 id="vehicle-number" class="text-2xl md:text-3xl font-black text-white mb-2 tracking-wider select-all">
+                                    -- --- --
+                                </h2>
+                                <div class="inline-flex items-center px-3 py-1.5 bg-red-500/20 backdrop-blur-lg rounded-full border border-red-500/30">
+                                    <div class="status-indicator"></div>
+                                    <span class="text-red-400 font-semibold text-xs ml-1.5">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        To'lanmagan
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Time Information with Images -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <!-- Entry Time with Image -->
+                            <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-lg rounded-xl p-4 border border-blue-500/30">
+                                <div class="flex items-center mb-3">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-sign-in-alt text-white text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-white font-semibold text-sm">Kirish vaqti</h3>
+                                        <p class="text-blue-200 text-xs">Entry Time</p>
+                                    </div>
+                                </div>
+                                <div class="text-center mb-3">
+                                    <div id="entry-time" class="text-2xl font-bold text-white font-mono">
+                                        --:--
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <div id="entry-image-container" class="bg-gray-800/50 rounded-lg overflow-hidden">
+                                        <img id="entry-image" src="" alt="Kirish rasmi" 
+                                             class="w-full h-40 object-cover opacity-0 transition-opacity duration-500"
+                                             onload="this.style.opacity='1'"
+                                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Ik02MCAxMDBDNTMuMzcyNSAxMDAgNDggMTA1LjM3MyA0OCAxMTJWMzJDNCA4IDU2IDU2IDU2IDU2QzU2IDU2IDY0IDQ4IDcyIDQ4SDg4Qzk1LjYyNzUgNDggMTAwIDUyLjM3MjUgMTAwIDYwVjEwMEg2MFoiIGZpbGw9IiM2QjcyODAiLz4KPHBhdGggZD0iTTE0MCAxMDBIMTIwVjYwQzEyMCA1Mi4zNzI1IDEyNC4zNzMgNDggMTMyIDQ4SDE0OEMxNTUuNjI3IDQ4IDE2MCA1Mi4zNzI1IDE2MCA2MFYxMDBIMTQwWiIgZmlsbD0iIzZCNzI4MCIvPgo8cGF0aCBkPSJNMTQwIDEwMEgxNjBWMzJDNjAgOCA0OCA4IDQ4IDhWMzJDMCA4IDU2IDU2IDU2IDU2QzU2IDU2IDY0IDQ4IDcyIDQ4SDg4Qzk1LjYyNzUgNDggMTAwIDUyLjM3MjUgMTAwIDYwVjEwMEgxMjBIMTQwWiIgZmlsbD0iIzZCNzI4MCIvPgo8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMjAiIHI9IjE2IiBmaWxsPSIjNkI3MjgwIi8+CjxwYXRoIGQ9Ik04OCAxMjBDODguMDAwMSAxMjAgODguMDAwMSAxMjAgODggMTIwQzg4IDExOS45OTkgODguMDAwMSAxMTkuOTk5IDg4IDExOS45OTlDODguMDAwMSAxMTkuOTk5IDg4IDExOS45OTkgODggMTIwWiIgZmlsbD0iIzZCNzI4MCIvPgo8L3N2Zz4K'; this.style.opacity='1'">
+                                        <div id="entry-image-placeholder" class="absolute inset-0 flex items-center justify-center">
+                                            <div class="text-center">
+                                                <i class="fas fa-image text-lg text-white/50 mb-1"></i>
+                                                <p class="text-white/50 text-xs">Rasm yuklanmoqda...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Exit Time with Image -->
+                            <div class="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-lg rounded-xl p-4 border border-orange-500/30">
+                                <div class="flex items-center mb-3">
+                                    <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-sign-out-alt text-white text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-white font-semibold text-sm">Chiqish vaqti</h3>
+                                        <p class="text-orange-200 text-xs">Exit Time</p>
+                                    </div>
+                                </div>
+                                <div class="text-center mb-3">
+                                    <div id="exit-time" class="text-2xl font-bold text-white font-mono">
+                                        --:--
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <div id="exit-image-container" class="bg-gray-800/50 rounded-lg overflow-hidden">
+                                        <img id="exit-image" src="" alt="Chiqish rasmi" 
+                                             class="w-full h-40 object-cover opacity-0 transition-opacity duration-500"
+                                             onload="this.style.opacity='1'"
+                                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Ik02MCAxMDBDNTMuMzcyNSAxMDAgNDggMTA1LjM3MyA0OCAxMTJWMzJDNCA4IDU2IDU2IDU2IDU2QzU2IDU2IDY0IDQ4IDcyIDQ4SDg4Qzk1LjYyNzUgNDggMTAwIDUyLjM3MjUgMTAwIDYwVjEwMEg2MFoiIGZpbGw9IiM2QjcyODAiLz4KPHBhdGggZD0iTTE0MCAxMDBIMTIwVjYwQzEyMCA1Mi4zNzI1IDEyNC4zNzMgNDggMTMyIDQ4SDE0OEMxNTUuNjI3IDQ4IDE2MCA1Mi4zNzI1IDE2MCA2MFYxMDBIMTQwWiIgZmlsbD0iIzZCNzI4MCIvPgo8cGF0aCBkPSJNMTQwIDEwMEgxNjBWMzJDNjAgOCA0OCA4IDQ4IDhWMzJDMCA4IDU2IDU2IDU2IDU2QzU2IDU2IDY0IDQ4IDcyIDQ4SDg4Qzk1LjYyNzUgNDggMTAwIDUyLjM3MjUgMTAwIDYwVjEwMEgxMjBIMTQwWiIgZmlsbD0iIzZCNzI4MCIvPgo8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMjAiIHI9IjE2IiBmaWxsPSIjNkI3MjgwIi8+CjxwYXRoIGQ9Ik04OCAxMjBDODguMDAwMSAxMjAgODguMDAwMSAxMjAgODggMTIwQzg4IDExOS45OTkgODguMDAwMSAxMTkuOTk5IDg4IDExOS45OTlDODguMDAwMSAxMTkuOTk5IDg4IDExOS45OTkgODggMTIwWiIgZmlsbD0iIzZCNzI4MCIvPgo8L3N2Zz4K'; this.style.opacity='1'">
+                                        <div id="exit-image-placeholder" class="absolute inset-0 flex items-center justify-center">
+                                            <div class="text-center">
+                                                <i class="fas fa-image text-lg text-white/50 mb-1"></i>
+                                                <p class="text-white/50 text-xs">Rasm yuklanmoqda...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Amount Information -->
+                        <div class="bg-gradient-to-br from-green-500/20 to-emerald-600/20 backdrop-blur-lg rounded-xl p-4 border border-green-500/30 mb-4">
+                            <div class="text-center">
+                                <div class="flex items-center justify-center mb-4">
+                                    <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mr-4">
+                                        <i class="fas fa-money-bill-wave text-white text-xl"></i>
+                                    </div>
+                                    <div class="text-left">
+                                        <h3 class="text-white font-semibold text-lg">To'lov miqdori</h3>
+                                        <p class="text-green-200 text-sm">Payment Amount</p>
+                                    </div>
+                                </div>
+                                <div id="payment-amount" class="text-4xl font-black text-white mb-2">
+                                    0 so'm
+                                </div>
+                                <div id="duration" class="text-green-200 text-base font-medium">
+                                    0 soat
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-4 right-4 z-50 max-w-xs w-full hidden">
+        <div class="glass-effect rounded-xl p-4 border-l-4 card-shadow notification-slide">
+            <div class="flex items-start">
+                <div id="notification-icon" class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mr-3">
+                    <i id="notification-icon-i" class="text-white text-xs"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 id="notification-title" class="text-white font-semibold mb-1 text-sm"></h4>
+                    <p id="notification-message" class="text-white/80 text-xs"></p>
+                </div>
+                <button onclick="hideNotification()" class="flex-shrink-0 text-white/60 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div id="connection-status" class="fixed bottom-4 right-4 z-50">
+        <div class="flex items-center px-3 py-1.5 bg-white/20 backdrop-blur-lg rounded-full border border-white/30 text-white text-xs cursor-pointer hover:bg-white/30 transition-all duration-300" onclick="toggleConnectionInfo()">
+            <div id="status-dot" class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5 animate-pulse"></div>
+            <span id="status-text">Ulanish...</span>
+            <i class="fas fa-chevron-down ml-1.5 text-xs transition-transform duration-300" id="status-chevron"></i>
+        </div>
+        
+        <!-- Connection Info Panel -->
+        <div id="connection-info" class="hidden absolute bottom-full right-0 mb-2 w-48 bg-white/20 backdrop-blur-lg rounded-xl border border-white/30 p-3 text-white text-xs">
+            <div class="space-y-1.5">
+                <div class="flex justify-between">
+                    <span>Holat:</span>
+                    <span id="info-status">Ulanish...</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Urinishlar:</span>
+                    <span id="info-attempts">0/5</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Vaqt:</span>
+                    <span id="info-time">--:--</span>
+                </div>
+                <hr class="border-white/20 my-1.5">
+                <button onclick="manualReconnect()" class="w-full bg-white/20 hover:bg-white/30 rounded-lg px-2 py-1.5 text-center transition-all duration-300 text-xs">
+                    <i class="fas fa-redo mr-1"></i>Qayta ulanish
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        let currentEntryId = null;
+        let isConnected = false;
+        let reconnectTimeout = null;
+        let lastConnectionTime = null;
+        
+        // DOM Elements
+        const loadingState = document.getElementById('loading-state');
+        const noDataState = document.getElementById('no-data-state');
+        const vehicleCard = document.getElementById('vehicle-card');
+        const vehicleNumber = document.getElementById('vehicle-number');
+        const entryTime = document.getElementById('entry-time');
+        const exitTime = document.getElementById('exit-time');
+        const paymentAmount = document.getElementById('payment-amount');
+        const duration = document.getElementById('duration');
+        const entryImage = document.getElementById('entry-image');
+        const exitImage = document.getElementById('exit-image');
+        const entryImagePlaceholder = document.getElementById('entry-image-placeholder');
+        const exitImagePlaceholder = document.getElementById('exit-image-placeholder');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const reconnectBtn = document.getElementById('reconnect-btn');
+        const statusChevron = document.getElementById('status-chevron');
+        const infoStatus = document.getElementById('info-status');
+        const infoAttempts = document.getElementById('info-attempts');
+        const infoTime = document.getElementById('info-time');
+        
+        function connectWebSocket() {
+            // Clear any existing timeout
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = null;
+            }
+            
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/home/`;
+            
+            try {
+                socket = new WebSocket(wsUrl);
+                
+                socket.onopen = function(e) {
+                    console.log('WebSocket connected');
+                    reconnectAttempts = 0;
+                    isConnected = true;
+                    lastConnectionTime = new Date();
+                    updateConnectionStatus('connected');
+                    showNotification('WebSocket ulanishi o\'rnatildi', 'success');
+                    
+                    // Request latest unpaid entry
+                    requestLatestUnpaidEntry();
+                };
+                
+                socket.onmessage = function(e) {
+                    try {
+                        const data = JSON.parse(e.data);
+                        handleWebSocketMessage(data);
+                    } catch (error) {
+                        console.error('Error parsing WebSocket message:', error);
+                    }
+                };
+                
+                socket.onclose = function(e) {
+                    console.log('WebSocket disconnected:', e.code, e.reason);
+                    isConnected = false;
+                    updateConnectionStatus('disconnected');
+                    
+                    // Show loading state when disconnected
+                    showLoadingState();
+                    
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        // Exponential backoff: 2^attempt * 1000ms
+                        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
+                        reconnectAttempts++;
+                        
+                        reconnectTimeout = setTimeout(() => {
+                            updateConnectionStatus('reconnecting');
+                            connectWebSocket();
+                        }, delay);
+                    } else {
+                        updateConnectionStatus('failed');
+                        showNotification('WebSocket ulanishi amalga oshmadi. Sahifani yangilang yoki qayta ulanish tugmasini bosing.', 'error');
+                    }
+                };
+                
+                socket.onerror = function(e) {
+                    console.error('WebSocket error:', e);
+                    isConnected = false;
+                    updateConnectionStatus('error');
+                };
+                
+            } catch (error) {
+                console.error('Error creating WebSocket:', error);
+                isConnected = false;
+                updateConnectionStatus('error');
+                showNotification('WebSocket yaratishda xato yuz berdi', 'error');
+            }
+        }
+        
+        function handleWebSocketMessage(data) {
+            if (data.type === 'latest_unpaid_entry_update') {
+                updateUnpaidEntry(data.data);
+            } else if (data.type === 'notification') {
+                showNotification(data.message, data.notification_type);
+            } else if (data.type === 'model_update') {
+                // Handle model updates (when entry is marked as paid)
+                if (data.action === 'payment_completed' && currentEntryId === data.entry_id) {
+                    // Entry was marked as paid, request new latest unpaid entry
+                    setTimeout(() => {
+                        requestLatestUnpaidEntry();
+                    }, 1000);
+                }
+            }
+        }
+        
+        function requestLatestUnpaidEntry() {
+            if (socket && socket.readyState === WebSocket.OPEN && isConnected) {
+                socket.send(JSON.stringify({
+                    type: 'get_latest_unpaid_entry',
+                    date: new Date().toISOString().split('T')[0]
+                }));
+            }
+        }
+        
+        function updateUnpaidEntry(entry) {
+            if (!entry) {
+                showNoDataState();
+                return;
+            }
+            
+            currentEntryId = entry.id;
+            showVehicleCard();
+            
+            // Update vehicle information
+            vehicleNumber.textContent = entry.number_plate;
+            entryTime.textContent = entry.entry_time;
+            exitTime.textContent = entry.exit_time;
+            paymentAmount.textContent = `${entry.total_amount.toLocaleString()} so'm`;
+            
+            const durationHours = entry.duration_hours || 0;
+            duration.textContent = `${durationHours.toFixed(1)} soat`;
+            
+            // Update images
+            updateImage(entryImage, entryImagePlaceholder, entry.entry_image);
+            updateImage(exitImage, exitImagePlaceholder, entry.exit_image);
+        }
+        
+        function updateImage(imgElement, placeholderElement, imageUrl) {
+            if (imageUrl) {
+                imgElement.src = imageUrl;
+                placeholderElement.style.display = 'none';
+            } else {
+                imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Ik02MCAxMDBDNTMuMzcyNSAxMDAgNDggMTA1LjM3MyA0OCAxMTJWMzJDNCA4IDU2IDU2IDU2IDU2QzU2IDU2IDY0IDQ4IDcyIDQ4SDg4Qzk1LjYyNzUgNDggMTAwIDUyLjM3MjUgMTAwIDYwVjEwMEg2MFoiIGZpbGw9IiM2QjcyODAiLz4KPHBhdGggZD0iTTE0MCAxMDBIMTIwVjYwQzEyMCA1Mi4zNzI1IDEyNC4zNzMgNDggMTMyIDQ4SDE0OEMxNTUuNjI3IDQ4IDE2MCA1Mi4zNzI1IDE2MCA2MFYxMDBIMTQwWiIgZmlsbD0iIzZCNzI4MCIvPgo8cGF0aCBkPSJNMTQwIDEwMEgxNjBWMzJDNjAgOCA0OCA4IDQ4IDhWMzJDMCA4IDU2IDU2IDU2IDU2QzU2IDU2IDY0IDQ4IDcyIDQ4SDg4Qzk1LjYyNzUgNDggMTAwIDUyLjM3MjUgMTAwIDYwVjEwMEgxMjBIMTQwWiIgZmlsbD0iIzZCNzI4MCIvPgo8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMjAiIHI9IjE2IiBmaWxsPSIjNkI3MjgwIi8+CjxwYXRoIGQ9Ik04OCAxMjBDODguMDAwMSAxMjAgODguMDAwMSAxMjAgODggMTIwQzg4IDExOS45OTkgODguMDAwMSAxMTkuOTk5IDg4IDExOS45OTlDODguMDAwMSAxMTkuOTk5IDg4IDExOS45OTkgODggMTIwWiIgZmlsbD0iIzZCNzI4MCIvPgo8L3N2Zz4K';
+                placeholderElement.style.display = 'flex';
+            }
+        }
+        
+        function showLoadingState() {
+            loadingState.classList.remove('hidden');
+            noDataState.classList.add('hidden');
+            vehicleCard.classList.add('hidden');
+            
+            // Update loading text based on connection status
+            const loadingText = document.querySelector('#loading-state p');
+            if (reconnectAttempts > 0 && reconnectAttempts < maxReconnectAttempts) {
+                loadingText.innerHTML = `Qayta ulanish urinish ${reconnectAttempts}/${maxReconnectAttempts}...`;
+                reconnectBtn.classList.add('hidden');
+            } else if (reconnectAttempts >= maxReconnectAttempts) {
+                loadingText.innerHTML = 'Ulanish amalga oshmadi. Sahifani yangilang.';
+                reconnectBtn.classList.remove('hidden');
+            } else {
+                loadingText.innerHTML = 'Kuting<span class="loading-dots"></span>';
+                reconnectBtn.classList.add('hidden');
+            }
+        }
+        
+        function showNoDataState() {
+            loadingState.classList.add('hidden');
+            noDataState.classList.remove('hidden');
+            vehicleCard.classList.add('hidden');
+            currentEntryId = null;
+        }
+        
+        function showVehicleCard() {
+            loadingState.classList.add('hidden');
+            noDataState.classList.add('hidden');
+            vehicleCard.classList.remove('hidden');
+        }
+        
+        function updateConnectionStatus(status) {
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            const statusChevron = document.getElementById('status-chevron');
+            const infoStatus = document.getElementById('info-status');
+            const infoAttempts = document.getElementById('info-attempts');
+            const infoTime = document.getElementById('info-time');
+
+            switch(status) {
+                case 'connected':
+                    statusDot.className = 'w-2 h-2 bg-green-500 rounded-full mr-2';
+                    statusText.textContent = 'Ulandi';
+                    statusChevron.classList.remove('fa-chevron-down');
+                    statusChevron.classList.add('fa-chevron-up');
+                    infoStatus.textContent = 'Ulandi';
+                    infoAttempts.textContent = `${reconnectAttempts}/5`;
+                    infoTime.textContent = new Date().toLocaleTimeString();
+                    break;
+                case 'disconnected':
+                    statusDot.className = 'w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse';
+                    statusText.textContent = 'Uzildi';
+                    statusChevron.classList.remove('fa-chevron-up');
+                    statusChevron.classList.add('fa-chevron-down');
+                    infoStatus.textContent = 'Uzildi';
+                    infoAttempts.textContent = `${reconnectAttempts}/5`;
+                    infoTime.textContent = new Date().toLocaleTimeString();
+                    break;
+                case 'reconnecting':
+                    statusDot.className = 'w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-pulse';
+                    statusText.textContent = `Qayta ulanish (${reconnectAttempts})`;
+                    statusChevron.classList.remove('fa-chevron-up');
+                    statusChevron.classList.add('fa-chevron-down');
+                    infoStatus.textContent = `Qayta ulanish (${reconnectAttempts})`;
+                    infoAttempts.textContent = `${reconnectAttempts}/5`;
+                    infoTime.textContent = new Date().toLocaleTimeString();
+                    break;
+                case 'failed':
+                    statusDot.className = 'w-2 h-2 bg-red-500 rounded-full mr-2';
+                    statusText.textContent = 'Xato';
+                    statusChevron.classList.remove('fa-chevron-up');
+                    statusChevron.classList.add('fa-chevron-down');
+                    infoStatus.textContent = 'Xato';
+                    infoAttempts.textContent = `${reconnectAttempts}/5`;
+                    infoTime.textContent = new Date().toLocaleTimeString();
+                    break;
+                case 'error':
+                    statusDot.className = 'w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse';
+                    statusText.textContent = 'Xato';
+                    statusChevron.classList.remove('fa-chevron-up');
+                    statusChevron.classList.add('fa-chevron-down');
+                    infoStatus.textContent = 'Xato';
+                    infoAttempts.textContent = `${reconnectAttempts}/5`;
+                    infoTime.textContent = new Date().toLocaleTimeString();
+                    break;
+                default:
+                    statusDot.className = 'w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-pulse';
+                    statusText.textContent = 'Ulanish...';
+                    statusChevron.classList.remove('fa-chevron-up', 'fa-chevron-down');
+                    infoStatus.textContent = 'Ulanish...';
+                    infoAttempts.textContent = `${reconnectAttempts}/5`;
+                    infoTime.textContent = new Date().toLocaleTimeString();
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const icon = document.getElementById('notification-icon');
+            const iconI = document.getElementById('notification-icon-i');
+            const title = document.getElementById('notification-title');
+            const messageEl = document.getElementById('notification-message');
+            
+            // Set notification type
+            switch(type) {
+                case 'success':
+                    icon.className = 'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4 bg-green-500';
+                    iconI.className = 'fas fa-check text-white';
+                    title.textContent = 'Muvaffaqiyatli';
+                    break;
+                case 'error':
+                    icon.className = 'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4 bg-red-500';
+                    iconI.className = 'fas fa-exclamation-circle text-white';
+                    title.textContent = 'Xato';
+                    break;
+                case 'warning':
+                    icon.className = 'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4 bg-yellow-500';
+                    iconI.className = 'fas fa-exclamation-triangle text-white';
+                    title.textContent = 'Ogohlantirish';
+                    break;
+                default:
+                    icon.className = 'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4 bg-blue-500';
+                    iconI.className = 'fas fa-info-circle text-white';
+                    title.textContent = 'Ma\'lumot';
+            }
+            
+            messageEl.textContent = message;
+            notification.classList.remove('hidden');
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                hideNotification();
+            }, 5000);
+        }
+        
+        function hideNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.add('hidden');
+        }
+        
+        // Auto-refresh every 30 seconds only when connected
+        setInterval(() => {
+            if (socket && socket.readyState === WebSocket.OPEN && isConnected) {
+                requestLatestUnpaidEntry();
+            }
+        }, 30000);
+        
+        // Connect WebSocket when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            connectWebSocket();
+        });
+        
+        // Reconnect on page focus
+        window.addEventListener('focus', function() {
+            if (socket && socket.readyState !== WebSocket.OPEN && !isConnected) {
+                reconnectAttempts = 0;
+                connectWebSocket();
+            }
+        });
+        
+        // Handle visibility change
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && socket && socket.readyState !== WebSocket.OPEN && !isConnected) {
+                reconnectAttempts = 0;
+                connectWebSocket();
+            }
+        });
+        
+        // Manual reconnect button (if needed)
+        function manualReconnect() {
+            if (socket && socket.readyState !== WebSocket.OPEN) {
+                // Reset connection state
+                reconnectAttempts = 0;
+                isConnected = false;
+                
+                // Clear any existing timeout
+                if (reconnectTimeout) {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = null;
+                }
+                
+                // Close existing socket if it exists
+                if (socket) {
+                    socket.close();
+                }
+                
+                showLoadingState();
+                updateConnectionStatus('reconnecting');
+                showNotification('Qayta ulanish boshlanmoqda...', 'info');
+                
+                // Connect after a short delay
+                setTimeout(() => {
+                    connectWebSocket();
+                }, 500);
+            }
+        }
+
+        // Toggle connection info panel
+        function toggleConnectionInfo() {
+            const connectionInfo = document.getElementById('connection-info');
+            const statusChevron = document.getElementById('status-chevron');
+            if (connectionInfo.classList.contains('hidden')) {
+                connectionInfo.classList.remove('hidden');
+                statusChevron.classList.remove('fa-chevron-down');
+                statusChevron.classList.add('fa-chevron-up');
+            } else {
+                connectionInfo.classList.add('hidden');
+                statusChevron.classList.remove('fa-chevron-up');
+                statusChevron.classList.add('fa-chevron-down');
+            }
+        }
+        
+        // Close connection info when clicking outside
+        document.addEventListener('click', function(event) {
+            const connectionStatus = document.getElementById('connection-status');
+            const connectionInfo = document.getElementById('connection-info');
+            
+            if (!connectionStatus.contains(event.target) && !connectionInfo.classList.contains('hidden')) {
+                connectionInfo.classList.add('hidden');
+                const statusChevron = document.getElementById('status-chevron');
+                statusChevron.classList.remove('fa-chevron-up');
+                statusChevron.classList.add('fa-chevron-down');
+            }
+        });
+        
+        // Update connection info time every second
+        setInterval(() => {
+            const infoTime = document.getElementById('info-time');
+            if (infoTime) {
+                infoTime.textContent = new Date().toLocaleTimeString();
+            }
+        }, 1000);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtualenv
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# Django
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+media/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# dotenv
+.env
+.env.*
+
+# Others
+*.sqlite3
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Static and media
+staticfiles/
+static/
+media/
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+
+# Pytest
+.pytest_cache/
+
+# Pipenv
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Mac
+*.DS_Store
+
+# Windows
+*.pyo
+*.pyd
+*.dll
+*.exe
+*.bat
+*.msi
+*.cab
+*.log
+
+#migrations
+migrations/

@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <title>Smart AutoPark Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* ASOSIY ORQA FON: Harakatlanuvchi Gradient (Animated Gradient) */
+        body {
+            /* Tungi shahar ranglari: To'q binafsha, to'q ko'k va qora */
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #0f172a);
+            background-size: 400% 400%;
+            animation: gradientMove 15s ease infinite; /* 15 sekundda ranglar almashib turadi */
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ranglar almashish animatsiyasi */
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Suzib yuruvchi mavhum sharlar (Ambient Light) */
+        .ambient-light {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            z-index: 0;
+            animation: float 10s infinite ease-in-out;
+        }
+        .light-1 {
+            top: 10%;
+            left: 20%;
+            width: 300px;
+            height: 300px;
+            background: rgba(236, 72, 153, 0.2); /* Pink */
+        }
+        .light-2 {
+            bottom: 10%;
+            right: 20%;
+            width: 400px;
+            height: 400px;
+            background: rgba(34, 211, 238, 0.15); /* Cyan */
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.1); }
+        }
+
+        /* Login Kartasi - Minimalistik va Toza */
+        .login-card {
+            background: rgba(255, 255, 255, 0.05); /* Juda shaffof oq */
+            backdrop-filter: blur(25px); /* Kuchli xiralashtirish */
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        /* Inputlar */
+        .modern-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modern-input:focus {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: #22d3ee; /* Cyan rang */
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+            outline: none;
+            transform: scale(1.01);
+        }
+
+        /* Neon Tugma */
+        .neon-btn {
+            background: linear-gradient(90deg, #0ea5e9, #22d3ee); /* Sky to Cyan */
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .neon-btn:hover {
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Orqa fondagi suzib yuruvchi nurlar -->
+    <div class="ambient-light light-1"></div>
+    <div class="ambient-light light-2"></div>
+
+    <!-- Alert Xabar -->
+    {% if message %}
+    <div id="alert-message" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 bg-red-500/80 text-white px-6 py-3 rounded-full shadow-xl backdrop-blur-md flex items-center gap-2 border border-red-400/30">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        <span class="font-medium text-sm">{{ message }}</span>
+    </div>
+    <script>
+        setTimeout(function() {
+            const alert = document.getElementById('alert-message');
+            if(alert){
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s';
+                setTimeout(() => alert.remove(), 500);
+            }
+        }, 3500);
+    </script>
+    {% endif %}
+
+    <!-- Login Kartasi -->
+    <div class="login-card w-full max-w-sm rounded-3xl p-8 md:p-10 relative">
+        
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <div class="inline-block p-3 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 mb-4 shadow-inner">
+                <!-- Avtomobil Iconkasi -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-white tracking-wider">Smart Park</h1>
+            <p class="text-cyan-200/60 text-xs uppercase tracking-[0.2em] mt-2">Boshqaruv Tizimi</p>
+        </div>
+
+        <!-- Forma -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="group">
+                <label for="username" class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2 ml-1">Foydalanuvchi</label>
+                <input type="text" id="username" name="username" class="modern-input block w-full rounded-xl py-3.5 px-5 text-sm" placeholder="Loginni kiriting" required>
+            </div>
+            
+            <div class="group">
+                <label for="password" class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2 ml-1">Parol</label>
+                <div class="relative">
+                    <input type="password" id="password" name="password" class="modern-input block w-full rounded-xl py-3.5 px-5 text-sm pr-12" placeholder="********" required>
+                    
+                    <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-cyan-300 transition-colors focus:outline-none" onclick="togglePasswordVisibility()">
+                        <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="neon-btn w-full rounded-xl py-4 text-white font-bold text-sm uppercase tracking-widest shadow-lg mt-4">
+                Tizimga Kirish
+            </button>
+        </form>
+    </div>
+
+    <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95m3.161-2.385A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.973 9.973 0 01-4.293 5.032M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />';
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />';
+            }
+        }
+    </script>
+</body>
+</html>

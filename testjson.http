@@ -1,0 +1,16 @@
+### WITH IMAGE
+POST http://127.0.0.1:8000/receive-entry/
+Content-Type: multipart/form-data; boundary=BOUNDARY
+
+--BOUNDARY
+Content-Disposition: form-data; name="license_plate"
+
+50A777AA
+--BOUNDARY
+Content-Disposition: form-data; name="image"; filename="car.jpg"
+Content-Type: image/jpeg
+
+< ./car.jpg
+--BOUNDARY--
+
+

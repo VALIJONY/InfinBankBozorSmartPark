@@ -1,0 +1,192 @@
+### Test receive-entry (creates entry with image and licensePlate)
+POST http://127.0.0.1:8000/receive-entry/
+Content-Type: multipart/form-data; boundary=BOUNDARY123
+
+--BOUNDARY123
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>AA123AA</licensePlate>
+--BOUNDARY123
+Content-Disposition: form-data; name="image"; filename="entry.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARY123--
+
+### Test receive-exit (marks exit for same plate)
+POST http://127.0.0.1:8000/receive-exit/
+Content-Type: multipart/form-data; boundary=BOUNDARY123
+
+--BOUNDARY123
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>AA123AA</licensePlate>
+--BOUNDARY123
+Content-Disposition: form-data; name="image"; filename="exit.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARY123--
+
+### Optional: different plate
+POST http://127.0.0.1:8000/receive-entry/
+Content-Type: multipart/form-data; boundary=BOUNDARYXYZ
+
+--BOUNDARYXYZ
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>ZZ999ZZ</licensePlate>
+--BOUNDARYXYZ
+Content-Disposition: form-data; name="image"; filename="entry2.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARYXYZ--
+
+### Entry for BB456CC
+POST http://127.0.0.1:8000/receive-entry/
+Content-Type: multipart/form-data; boundary=BOUNDARYBB
+
+--BOUNDARYBB
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>BB456CC</licensePlate>
+--BOUNDARYBB
+Content-Disposition: form-data; name="image"; filename="entry_bb.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARYBB--
+
+### Exit for BB456CC
+POST http://127.0.0.1:8000/receive-exit/
+Content-Type: multipart/form-data; boundary=BOUNDARYBBEXIT
+
+--BOUNDARYBBEXIT
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>BB456CC</licensePlate>
+--BOUNDARYBBEXIT
+Content-Disposition: form-data; name="image"; filename="exit_bb.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARYBBEXIT--
+
+### Entry for CC777CC (no exit yet)
+POST http://127.0.0.1:8000/receive-entry/
+Content-Type: multipart/form-data; boundary=BOUNDARYCC
+
+--BOUNDARYCC
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>CC777CC</licensePlate>
+--BOUNDARYCC
+Content-Disposition: form-data; name="image"; filename="entry_cc.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARYCC--
+
+### Entry for DD888DD
+POST http://127.0.0.1:8000/receive-entry/
+Content-Type: multipart/form-data; boundary=BOUNDARYDD
+
+--BOUNDARYDD
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>DD888DD</licensePlate>
+--BOUNDARYDD
+Content-Disposition: form-data; name="image"; filename="entry_dd.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARYDD--
+
+### Exit for DD888DD
+POST http://127.0.0.1:8000/receive-exit/
+Content-Type: multipart/form-data; boundary=BOUNDARYDDEXIT
+
+--BOUNDARYDDEXIT
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>DD888DD</licensePlate>
+--BOUNDARYDDEXIT
+Content-Disposition: form-data; name="image"; filename="exit_dd.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARYDDEXIT--
+
+
+
+POST http://127.0.0.1:8000/receive-entry/
+Content-Type: multipart/form-data; boundary=BOUNDARYDD
+
+--BOUNDARYDD
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>DD777DD</licensePlate>
+--BOUNDARYDD
+Content-Disposition: form-data; name="image"; filename="entry_dd.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARYDD--
+
+
+POST http://127.0.0.1:8000/receive-exit/
+Content-Type: multipart/form-data; boundary=BOUNDARYDD
+
+--BOUNDARYDD
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>DD777DD</licensePlate>
+--BOUNDARYDD
+Content-Disposition: form-data; name="image"; filename="entry_dd.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARYDD--
+
+
+
+POST http://127.0.0.1:8000/receive-entry/
+Content-Type: multipart/form-data; boundary=BOUNDARYDD
+
+--BOUNDARYDD
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>DD666DD</licensePlate>
+--BOUNDARYDD
+Content-Disposition: form-data; name="image"; filename="entry_dd.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARYDD--
+
+POST http://127.0.0.1:8000/receive-exit/
+Content-Type: multipart/form-data; boundary=BOUNDARYDD
+
+--BOUNDARYDD
+Content-Disposition: form-data; name="xml"
+Content-Type: text/xml; charset=utf-8
+
+<licensePlate>DD666DD</licensePlate>
+--BOUNDARYDD
+Content-Disposition: form-data; name="image"; filename="entry_dd.jpg"
+Content-Type: image/jpeg
+
+fake-jpeg-bytes
+--BOUNDARYDD--
